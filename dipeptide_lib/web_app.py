@@ -271,6 +271,8 @@ def file_uploader_to_mol(uploaded):
 
 
 def smiles_to_count_vec(smi: str, nBits: int = N_BITS, radius: int = RADIUS):
+    if not HAS_RDKIT:
+        return None
     m = Chem.MolFromSmiles(smi)
     if m is None:
         return None
@@ -336,6 +338,7 @@ def main():
     # inject theme & hero
     st.markdown(THEME_CSS, unsafe_allow_html=True)
     st.markdown(HERO_HTML, unsafe_allow_html=True)
+    st.caption(f"RDKit状态：{'可用' if HAS_RDKIT else '不可用'}")
 
     # 数据可用性检查，避免云端缺失文件时报错
     if not (META_CSV and SDF_DIR and os.path.exists(META_CSV) and os.path.isdir(SDF_DIR)):
@@ -404,7 +407,12 @@ def main():
                 with st.expander(f"{cid}  |  {row['seq']}  |  MW={row['MW']:.1f}  logP={row['logP']:.2f}  TPSA={row['TPSA']:.1f}"):
                     cols = st.columns([1,2])
                     with cols[0]:
-                        img = render_mol_2d(Chem.MolFromSmiles(row['smiles']), legend=cid)
+                        img = None
+                        if HAS_RDKIT:
+                            try:
+                                img = render_mol_2d(Chem.MolFromSmiles(row['smiles']), legend=cid)
+                            except Exception:
+                                img = None
                         if img:
                             st.image(img)
                         st.download_button('下载 SDF', data=open(sdf_path,'rb').read(), file_name=f"{cid}.sdf")
