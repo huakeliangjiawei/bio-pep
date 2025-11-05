@@ -502,7 +502,12 @@ def main():
             with st.expander(f"{cid}  |  Tanimoto={tanimoto:.3f}  |  {row['seq']}  |  MW={row['MW']:.1f}  logP={row['logP']:.2f}  TPSA={row['TPSA']:.1f}"):
                 cols = st.columns([1,2])
                 with cols[0]:
-                    img = render_mol_2d(Chem.MolFromSmiles(row['smiles']), legend=cid)
+                    img = None
+                    if HAS_RDKIT:
+                        try:
+                            img = render_mol_2d(Chem.MolFromSmiles(row['smiles']), legend=cid)
+                        except Exception:
+                            img = None
                     if img:
                         st.image(img)
                     st.download_button('下载 SDF', data=open(sdf_path,'rb').read(), file_name=f"{cid}.sdf")
