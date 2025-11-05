@@ -10,18 +10,18 @@ import streamlit as st
 
 # 可选导入 RDKit（云端可能不可用）
 HAS_RDKIT = True
+RDKIT_IMPORT_ERROR = ''
 try:
     from rdkit import Chem
     from rdkit.Chem import AllChem, DataStructs
-    from rdkit.Chem.Draw import rdMolDraw2D
     from rdkit.Chem import rdDepictor
     from rdkit.Chem.rdMolDescriptors import GetMorganFingerprintAsBitVect, GetHashedMorganFingerprint
-except Exception:
+except Exception as e:
     HAS_RDKIT = False
+    RDKIT_IMPORT_ERROR = str(e)
     Chem = None
     AllChem = None
     DataStructs = None
-    rdMolDraw2D = None
     rdDepictor = None
     GetMorganFingerprintAsBitVect = None
     GetHashedMorganFingerprint = None
@@ -313,6 +313,8 @@ def render_mol_2d(mol, legend: str = ""):
     if not HAS_RDKIT or mol is None:
         return None
     try:
+        # 按需导入绘图后端，避免 Chem/AllChem 可用但 Cairo 缺失时影响整体功能
+        from rdkit.Chem.Draw import rdMolDraw2D  # type: ignore
         mc = Chem.Mol(mol)
         rdDepictor.Compute2DCoords(mc)
         d2d = rdMolDraw2D.MolDraw2DCairo(280, 210)
@@ -339,6 +341,8 @@ def main():
     st.markdown(THEME_CSS, unsafe_allow_html=True)
     st.markdown(HERO_HTML, unsafe_allow_html=True)
     st.caption(f"RDKit状态：{'可用' if HAS_RDKIT else '不可用'}")
+    if not HAS_RDKIT and RDKIT_IMPORT_ERROR:
+        st.caption(f"RDKit导入错误：{RDKIT_IMPORT_ERROR}")
 
     # 数据可用性检查，避免云端缺失文件时报错
     if not (META_CSV and SDF_DIR and os.path.exists(META_CSV) and os.path.isdir(SDF_DIR)):
