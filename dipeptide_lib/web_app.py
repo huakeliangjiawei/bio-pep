@@ -15,6 +15,8 @@ try:
     from rdkit import Chem
     from rdkit.Chem import AllChem, DataStructs
     from rdkit.Chem import rdDepictor
+    from rdkit.Chem import MACCSkeys
+    from rdkit.Chem import rdMolDescriptors
     from rdkit.Chem.rdMolDescriptors import GetMorganFingerprintAsBitVect, GetHashedMorganFingerprint
 except Exception as e:
     HAS_RDKIT = False
@@ -328,6 +330,16 @@ def render_mol_2d(mol, legend: str = ""):
 def render_mol_3d_py3dmol(sdf_path: str, width=420, height=320):
     import py3Dmol
     molblock = molblock_from_sdf(sdf_path)
+    # 移除氢原子以便更清晰展示
+    if HAS_RDKIT:
+        try:
+            suppl = Chem.SDMolSupplier(sdf_path)
+            mol = suppl[0] if len(suppl) > 0 else None
+            if mol:
+                mol_no_h = Chem.RemoveHs(mol, sanitize=True)
+                molblock = Chem.MolToMolBlock(mol_no_h)
+        except Exception:
+            pass
     view = py3Dmol.view(width=width, height=height)
     view.addModel(molblock, 'sdf')
     view.setStyle({'stick': {'colorscheme': 'orangeCarbon'}})
@@ -351,7 +363,7 @@ def main():
         st.markdown(FOOTER_HTML, unsafe_allow_html=True)
         return
 
-    df, ids, smiles, fps, id_to_row = load_resources()
+    df, ids, smiles, fps, id_to_row, fps_multi = load_resources()
 
     # Optional: load R-side features if present
     r_feat_path = '/data/deepcode/dipeptide_lib/output/peptide_features.csv'
@@ -369,6 +381,10 @@ def main():
             query_smiles = st.text_input('输入 SMILES', '')
             uploaded = st.file_uploader('或上传 SDF/SMILES 文件', type=['sdf', 'mol', 'smi', 'txt'])
             topk = st.slider('Top-K 返回数量', 5, 50, TOPK)
+            fp_choices = ['ECFP6','ECFP4','MACCS166','AtomPair','TopologicalTorsion','LayeredFP']
+            selected_fps = st.multiselect('选择指纹方法（可多选）', fp_choices, default=['ECFP6'])
+            metric = st.selectbox('相似度度量', ['Tanimoto','Dice'], index=0)
+            agg = st.selectbox('综合方式', ['加权平均','取最大值'], index=0)
             run = st.button('开始检索')
             st.divider()
         else:
@@ -419,7 +435,19 @@ def main():
                                 img = None
                         if img:
                             st.image(img)
-                        st.download_button('下载 SDF', data=open(sdf_path,'rb').read(), file_name=f"{cid}.sdf", key=f"dl_sdf_pair_{cid}")
+                        # 提供无氢版 SDF 下载
+                    data_sdf = open(sdf_path,'rb').read()
+                    fn = f"{cid}.sdf"
+                    if HAS_RDKIT:
+                        try:
+                            mol = Chem.SDMolSupplier(sdf_path)[0]
+                            if mol:
+                                mol_no_h = Chem.RemoveHs(mol, sanitize=True)
+                                data_sdf = Chem.MolToMolBlock(mol_no_h).encode('utf-8')
+                                fn = f"{cid}_noH.sdf"
+                        except Exception:
+                            pass
+                    st.download_button('下载 SDF（无氢）', data=data_sdf, file_name=fn, key=f"dl_sdf_pair_{cid}")
                     with cols[1]:
                         try:
                             view = render_mol_3d_py3dmol(sdf_path)
@@ -486,14 +514,55 @@ def main():
             st.markdown(FOOTER_HTML, unsafe_allow_html=True)
             return
 
-        # 位指纹 + Tanimoto 全库扫描（Top-K）
-        qfp = GetMorganFingerprintAsBitVect(query_mol, radius=RADIUS, nBits=N_BITS)
+        # 多指纹 + 多度量 + 综合方式
+        def _sim_score(qmol, target_fp_map):
+            scores = []
+            for name in selected_fps:
+                try:
+                    if name == 'ECFP6':
+                        q = GetMorganFingerprintAsBitVect(qmol, radius=6, nBits=N_BITS)
+                        t = target_fp_map.get('ECFP6')
+                    elif name == 'ECFP4':
+                        q = GetMorganFingerprintAsBitVect(qmol, radius=4, nBits=N_BITS)
+                        t = target_fp_map.get('ECFP4')
+                    elif name == 'MACCS166':
+                        from rdkit.Chem import MACCSkeys
+                        q = MACCSkeys.GenMACCSKeys(qmol)
+                        t = target_fp_map.get('MACCS166')
+                    elif name == 'AtomPair':
+                        q = rdMolDescriptors.GetHashedAtomPairFingerprint(qmol, nBits=N_BITS)
+                        t = target_fp_map.get('AtomPair')
+                    elif name == 'TopologicalTorsion':
+                        q = rdMolDescriptors.GetHashedTopologicalTorsionFingerprint(qmol, nBits=N_BITS)
+                        t = target_fp_map.get('TopologicalTorsion')
+                    elif name == 'LayeredFP':
+                        q = rdMolDescriptors.GetLayeredFingerprint(qmol)
+                        t = target_fp_map.get('LayeredFP')
+                    else:
+                        continue
+                    if q is None or t is None:
+                        continue
+                    if metric == 'Tanimoto':
+                        s = DataStructs.TanimotoSimilarity(q, t)
+                    else:
+                        s = DataStructs.DiceSimilarity(q, t)
+                    scores.append(float(s))
+                except Exception:
+                    pass
+            if not scores:
+                return 0.0
+            if agg == '取最大值':
+                return max(scores)
+            # 默认加权平均（均匀权重）
+            return sum(scores) / len(scores)
+
         sims = []
-        for cid, fp in zip(ids, fps):
-            if fp is None:
+        for cid, fpmap in zip(ids, fps_multi):
+            if fpmap is None:
                 sims.append((cid, 0.0))
             else:
-                sims.append((cid, float(DataStructs.TanimotoSimilarity(qfp, fp))))
+                s = _sim_score(query_mol, fpmap)
+                sims.append((cid, s))
         sims.sort(key=lambda x: x[1], reverse=True)
         ranked = sims[:topk]
 
@@ -514,7 +583,19 @@ def main():
                             img = None
                     if img:
                         st.image(img)
-                    st.download_button('下载 SDF', data=open(sdf_path,'rb').read(), file_name=f"{cid}.sdf", key=f"dl_sdf_sim_{cid}")
+                    # 提供无氢版 SDF 下载
+                    data_sdf = open(sdf_path,'rb').read()
+                    fn = f"{cid}.sdf"
+                    if HAS_RDKIT:
+                        try:
+                            mol = Chem.SDMolSupplier(sdf_path)[0]
+                            if mol:
+                                mol_no_h = Chem.RemoveHs(mol, sanitize=True)
+                                data_sdf = Chem.MolToMolBlock(mol_no_h).encode('utf-8')
+                                fn = f"{cid}_noH.sdf"
+                        except Exception:
+                            pass
+                    st.download_button('下载 SDF（无氢）', data=data_sdf, file_name=fn, key=f"dl_sdf_sim_{cid}")
                 with cols[1]:
                     try:
                         view = render_mol_3d_py3dmol(sdf_path)
