@@ -26,12 +26,63 @@ except Exception:
     GetMorganFingerprintAsBitVect = None
     GetHashedMorganFingerprint = None
 
-# 默认数据集指向最大库（可改为其他目录）
-META_CSV = '/data/deepcode/dipeptide_lib/output_nonstandard_LD/metadata.csv'
-SDF_DIR = '/data/deepcode/dipeptide_lib/output_nonstandard_LD/sdf'
+# 数据路径：优先使用仓库相对 data/，如无则使用 secrets.DATA_URL 指向的 ZIP（自动下载并递归定位）
 N_BITS = 1024
 RADIUS = 6
 TOPK = 10
+
+def _find_dataset_root(base_dir: str):
+    meta_path = None
+    sdf_dir = None
+    for root, dirs, files in os.walk(base_dir):
+        if 'metadata.csv' in files and meta_path is None:
+            meta_path = os.path.join(root, 'metadata.csv')
+        # 找到含有至少一个 .sdf 文件的目录
+        if sdf_dir is None:
+            for d in dirs:
+                cand = os.path.join(root, d)
+                try:
+                    has_sdf = any(f.lower().endswith('.sdf') for f in os.listdir(cand))
+                except Exception:
+                    has_sdf = False
+                if has_sdf:
+                    sdf_dir = cand
+                    break
+        if meta_path and sdf_dir:
+            break
+    return meta_path, sdf_dir
+
+def prepare_data_paths():
+    # 1) 仓库相对 data/
+    repo_data = os.path.join(os.path.dirname(__file__), '..', 'data')
+    repo_data = os.path.abspath(repo_data)
+    meta1, sdf1 = _find_dataset_root(repo_data)
+    if meta1 and sdf1:
+        return meta1, sdf1
+    # 2) secrets.DATA_URL（ZIP）
+    data_url = ''
+    try:
+        data_url = st.secrets.get('DATA_URL', '').strip()
+    except Exception:
+        data_url = ''
+    if data_url:
+        cache_dir = os.path.join(os.path.expanduser('~'), '.cache', 'dipeptide_lib')
+        os.makedirs(cache_dir, exist_ok=True)
+        zip_path = os.path.join(cache_dir, 'dataset.zip')
+        if not os.path.exists(zip_path):
+            r = requests.get(data_url, timeout=120)
+            r.raise_for_status()
+            with open(zip_path, 'wb') as f:
+                f.write(r.content)
+        with zipfile.ZipFile(zip_path, 'r') as zf:
+            zf.extractall(cache_dir)
+        meta2, sdf2 = _find_dataset_root(cache_dir)
+        if meta2 and sdf2:
+            return meta2, sdf2
+    # 3) fallback：提示缺失
+    return None, None
+
+META_CSV, SDF_DIR = prepare_data_paths()
 
 THEME_CSS = """
 <style>
@@ -284,9 +335,9 @@ def main():
     st.markdown(HERO_HTML, unsafe_allow_html=True)
 
     # 数据可用性检查，避免云端缺失文件时报错
-    if not (os.path.exists(META_CSV) and os.path.isdir(SDF_DIR)):
+    if not (META_CSV and SDF_DIR and os.path.exists(META_CSV) and os.path.isdir(SDF_DIR)):
         st.error('数据未找到：请将 data/metadata.csv 与 data/sdf/ 放入仓库，或在 App Settings -> Secrets 中设置 DATA_URL 指向包含 metadata.csv 与 sdf/ 的 ZIP。')
-        st.caption('示例：DATA_URL=https://your-host/dipeptide_dataset.zip')
+        st.caption('已自动尝试从 DATA_URL 下载并递归定位文件，但未找到有效结构。请确保 ZIP 根目录包含 metadata.csv 与 sdf/，或其子目录中包含这些内容。')
         st.markdown(FOOTER_HTML, unsafe_allow_html=True)
         return
 
