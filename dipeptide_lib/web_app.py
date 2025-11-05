@@ -500,7 +500,7 @@ def main():
             run = st.button('开始检索')
             st.divider()
         else:
-            st.info('云端环境未加载 RDKit：已自动隐藏相似检索功能。请确保 requirements 安装成功或固定 Python 版本为 3.10。')
+            st.info('RDKit is not available in the cloud environment. Similarity search has been disabled. Please ensure requirements install successfully or pin Python to 3.10.')
             query_smiles = ''
             uploaded = None
             topk = TOPK
@@ -636,8 +636,7 @@ def main():
             st.markdown(FOOTER_HTML, unsafe_allow_html=True)
             return
 
-        # 多指纹 + 多度量 + 综合方式
-        def _sim_score(qmol, target_fp_map):
+        # Multi-fingerprint + multi-metric + aggregation        def _sim_score(qmol, target_fp_map):
             scores = []
             for name in selected_fps:
                 try:
