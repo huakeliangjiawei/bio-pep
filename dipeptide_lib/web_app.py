@@ -65,7 +65,9 @@ def _build_no_h_sdf_cache(sdf_dir: str) -> str:
         if not fname.lower().endswith('.sdf'):
             continue
         src = os.path.join(sdf_dir, fname)
-        dst = os.path.join(out_dir, fname.replace('.sdf', '_noH.sdf'))
+        # normalize to id.sdf base then append _noH.sdf
+        base = os.path.splitext(fname)[0]
+        dst = os.path.join(out_dir, f"{base}_noH.sdf")
         if os.path.exists(dst):
             continue
         try:
@@ -91,7 +93,7 @@ def prepare_data_paths():
     repo_data = os.path.abspath(repo_data)
     meta1, sdf1 = _find_dataset_root(repo_data)
     if meta1 and sdf1:
-        return meta1, _build_no_h_sdf_cache(sdf1)
+        return meta1, sdf1, _build_no_h_sdf_cache(sdf1)
     # 2) secrets.DATA_URL (ZIP)
     data_url = ''
     try:
@@ -111,11 +113,11 @@ def prepare_data_paths():
             zf.extractall(cache_dir)
         meta2, sdf2 = _find_dataset_root(cache_dir)
         if meta2 and sdf2:
-            return meta2, _build_no_h_sdf_cache(sdf2)
+            return meta2, sdf2, _build_no_h_sdf_cache(sdf2)
     # 3) fallback: not found
-    return None, None
+    return None, None, None
 
-META_CSV, SDF_DIR = prepare_data_paths()
+META_CSV, SDF_DIR, SDF_DIR_NOH = prepare_data_paths()
 
 THEME_CSS = """
 <style>
@@ -482,7 +484,7 @@ def main():
             export_sdf_paths2 = []
             for _, row in hits.iterrows():
                 cid = row['id']
-                sdf_path = os.path.join(SDF_DIR, f"{cid}.sdf")
+                sdf_path = os.path.join(SDF_DIR_NOH or SDF_DIR, f"{cid}_noH.sdf" if SDF_DIR_NOH else f"{cid}.sdf")
                 with st.expander(f"{cid}  |  {row['seq']}  |  MW={row['MW']:.1f}  logP={row['logP']:.2f}  TPSA={row['TPSA']:.1f}"):
                     cols = st.columns([1,2])
                     with cols[0]:
@@ -640,7 +642,7 @@ def main():
         export_sdf_paths = []
         for cid, tanimoto in ranked:
             row = id_to_row[cid]
-            sdf_path = os.path.join(SDF_DIR, f"{cid}.sdf")
+            sdf_path = os.path.join(SDF_DIR_NOH or SDF_DIR, f"{cid}_noH.sdf" if SDF_DIR_NOH else f"{cid}.sdf")
             with st.expander(f"{cid}  |  Tanimoto={tanimoto:.3f}  |  {row['seq']}  |  MW={row['MW']:.1f}  logP={row['logP']:.2f}  TPSA={row['TPSA']:.1f}"):
                 cols = st.columns([1,2])
                 with cols[0]:
