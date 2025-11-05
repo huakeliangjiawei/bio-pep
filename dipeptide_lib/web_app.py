@@ -283,6 +283,13 @@ def main():
     st.markdown(THEME_CSS, unsafe_allow_html=True)
     st.markdown(HERO_HTML, unsafe_allow_html=True)
 
+    # 数据可用性检查，避免云端缺失文件时报错
+    if not (os.path.exists(META_CSV) and os.path.isdir(SDF_DIR)):
+        st.error('数据未找到：请将 data/metadata.csv 与 data/sdf/ 放入仓库，或在 App Settings -> Secrets 中设置 DATA_URL 指向包含 metadata.csv 与 sdf/ 的 ZIP。')
+        st.caption('示例：DATA_URL=https://your-host/dipeptide_dataset.zip')
+        st.markdown(FOOTER_HTML, unsafe_allow_html=True)
+        return
+
     df, ids, smiles, fps, id_to_row = load_resources()
 
     # Optional: load R-side features if present
