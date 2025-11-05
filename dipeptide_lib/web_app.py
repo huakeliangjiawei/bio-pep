@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 import streamlit as st
 
-# 可选导入 RDKit（云端可能不可用）
+# Optional RDKit import (may be unavailable in the cloud environment)
 HAS_RDKIT = True
 RDKIT_IMPORT_ERROR = ''
 try:
@@ -28,7 +28,7 @@ except Exception as e:
     GetMorganFingerprintAsBitVect = None
     GetHashedMorganFingerprint = None
 
-# 数据路径：优先使用仓库相对 data/，如无则使用 secrets.DATA_URL 指向的 ZIP（自动下载并递归定位）
+# Data paths: prefer repo-relative data/; otherwise use secrets.DATA_URL ZIP (download and locate recursively)
 N_BITS = 1024
 RADIUS = 6
 TOPK = 10
@@ -320,7 +320,7 @@ def load_resources():
     ids = [str(r['id']) for _, r in df.iterrows()]
     smiles = [str(r['smiles']) for _, r in df.iterrows()]
     id_to_row = {str(r['id']): r for _, r in df.iterrows()}
-    # 预生成多种指纹以加速（若 RDKit 不可用则填 None）
+    # Precompute multiple fingerprints for speed (None if RDKit unavailable)
     fps = []
     fps_multi = []  # per-molecule dict: {'ECFP6','ECFP4','MACCS166','AtomPair','TopologicalTorsion','LayeredFP'}
     if HAS_RDKIT:
@@ -442,7 +442,7 @@ def render_mol_2d(mol, legend: str = ""):
 def render_mol_3d_py3dmol(sdf_path: str, width=420, height=320):
     import py3Dmol
     molblock = molblock_from_sdf(sdf_path)
-    # 移除氢原子以便更清晰展示
+    # Remove hydrogens for clearer visualization
     if HAS_RDKIT:
         try:
             suppl = Chem.SDMolSupplier(sdf_path)
@@ -466,7 +466,7 @@ def main():
     st.markdown(HERO_HTML, unsafe_allow_html=True)
     st.caption(f"RDKit status: {'available' if HAS_RDKIT else 'unavailable'}")
     if not HAS_RDKIT and RDKIT_IMPORT_ERROR:
-        st.caption(f"RDKit导入错误：{RDKIT_IMPORT_ERROR}")
+        st.caption(f"RDKit import error: {RDKIT_IMPORT_ERROR}")
 
     # Data availability check to avoid errors when files are missing in cloud
     if not (META_CSV and SDF_DIR and os.path.exists(META_CSV) and os.path.isdir(SDF_DIR)):
@@ -489,15 +489,15 @@ def main():
     col1, col2 = st.columns([2, 1])
     with col1:
         if HAS_RDKIT:
-            st.subheader('方式一：相似检索')
-            query_smiles = st.text_input('输入 SMILES', '')
-            uploaded = st.file_uploader('或上传 SDF/SMILES 文件', type=['sdf', 'mol', 'smi', 'txt'])
-            topk = st.slider('Top-K 返回数量', 5, 50, TOPK)
+            st.subheader('Method 1: Similarity Search')
+            query_smiles = st.text_input('Enter SMILES', '')
+            uploaded = st.file_uploader('Or upload SDF/SMILES file', type=['sdf', 'mol', 'smi', 'txt'])
+            topk = st.slider('Top-K results', 5, 50, TOPK)
             fp_choices = ['ECFP6','ECFP4','MACCS166','AtomPair','TopologicalTorsion','LayeredFP']
-            selected_fps = st.multiselect('选择指纹方法（可多选）', fp_choices, default=['ECFP6'])
-            metric = st.selectbox('相似度度量', ['Tanimoto','Dice'], index=0)
-            agg = st.selectbox('综合方式', ['加权平均','取最大值'], index=0)
-            run = st.button('开始检索')
+            selected_fps = st.multiselect('Select fingerprints (multi-select)', fp_choices, default=['ECFP6'])
+            metric = st.selectbox('Similarity metric', ['Tanimoto','Dice'], index=0)
+            agg = st.selectbox('Aggregation', ['Weighted average','Max'], index=0)
+            run = st.button('Search')
             st.divider()
         else:
             st.info('RDKit is not available in the cloud environment. Similarity search has been disabled. Please ensure requirements install successfully or pin Python to 3.10.')
@@ -512,9 +512,9 @@ def main():
         aa2 = st.selectbox('Second amino acid type', sorted(set([x.split('-',1)[1] for x in df['aa2'] if '-' in x])))
         run_pair = st.button('Query this dipeptide')
     with col2:
-        st.subheader('库统计')
-        st.metric('分子数量', f"{len(ids)}")
-        st.caption('数据来自扩展非天然 + D 型全集，不去重。')
+        st.subheader('Library stats')
+        st.metric('Molecule count', f"{len(ids)}")
+        st.caption('Data includes natural and non-natural peptides (including D-form); no deduplication.')
 
     query_mol = None
     # Pair query by AA symbols
@@ -547,7 +547,7 @@ def main():
                                 img = None
                         if img:
                             st.image(img)
-                        # 提供无氢版 SDF 下载
+                    # Provide no-H SDF download
                     data_sdf = open(sdf_path,'rb').read()
                     fn = f"{cid}.sdf"
                     if HAS_RDKIT:
@@ -559,17 +559,17 @@ def main():
                                 fn = f"{cid}_noH.sdf"
                         except Exception:
                             pass
-                    st.download_button('下载 SDF（无氢）', data=data_sdf, file_name=fn, key=f"dl_sdf_pair_{cid}")
+                    st.download_button('Download SDF (no H)', data=data_sdf, file_name=fn, key=f"dl_sdf_pair_{cid}")
                     with cols[1]:
                         try:
                             view = render_mol_3d_py3dmol(sdf_path)
                             st.components.v1.html(view._make_html(), height=340)
                         except Exception:
-                            st.info('3D 视图不可用，显示 2D 图。')
+                            st.info('3D view unavailable; showing 2D depiction.')
                         if r_df is not None:
                             rr = r_df[r_df['id'] == cid]
                             if not rr.empty:
-                                st.markdown('R 侧特征:')
+                                st.markdown('R-side features:')
                                 rrow = rr.iloc[0]
                                 st.write({
                                     'seq_one': rrow.get('seq_one'),
@@ -672,9 +672,9 @@ def main():
                     pass
             if not scores:
                 return 0.0
-            if agg == '取最大值':
+            if agg == 'Max':
                 return max(scores)
-            # 默认加权平均（均匀权重）
+            # Default weighted average (equal weights)
             return sum(scores) / len(scores)
 
         sims = []
@@ -704,7 +704,7 @@ def main():
                             img = None
                     if img:
                         st.image(img)
-                    # 提供无氢版 SDF 下载
+                    # Provide no-H SDF download
                     data_sdf = open(sdf_path,'rb').read()
                     fn = f"{cid}.sdf"
                     if HAS_RDKIT:
@@ -716,22 +716,22 @@ def main():
                                 fn = f"{cid}_noH.sdf"
                         except Exception:
                             pass
-                    st.download_button('下载 SDF（无氢）', data=data_sdf, file_name=fn, key=f"dl_sdf_sim_{cid}")
+                    st.download_button('Download SDF (no H)', data=data_sdf, file_name=fn, key=f"dl_sdf_sim_{cid}")
                 with cols[1]:
                     try:
                         view = render_mol_3d_py3dmol(sdf_path)
                         st.components.v1.html(view._make_html(), height=340)
                     except Exception:
-                        st.info('3D 视图不可用，显示 2D 图。')
+                        st.info('3D view unavailable; showing 2D depiction.')
                 export_rows.append({k: row[k] for k in ['id','aa1','aa2','seq','smiles','MW','logP','TPSA']})
                 export_sdf_paths.append(sdf_path)
-        # 打包下载
+        # Bundle download
         if export_rows:
             import io, zipfile
             out_csv = io.StringIO()
             pd.DataFrame(export_rows).to_csv(out_csv, index=False)
             out_csv_bytes = out_csv.getvalue().encode('utf-8')
-            st.download_button('下载该结果的 CSV', data=out_csv_bytes, file_name='similar_results.csv')
+            st.download_button('Download result CSV', data=out_csv_bytes, file_name='similar_results.csv')
             zbuf = io.BytesIO()
             with zipfile.ZipFile(zbuf, 'w', zipfile.ZIP_DEFLATED) as zf:
                 zf.writestr('similar_results.csv', out_csv_bytes)
@@ -740,7 +740,7 @@ def main():
                         zf.write(pth, arcname=os.path.basename(pth))
                     except Exception:
                         pass
-            st.download_button('打包下载 Top-K SDF+CSV', data=zbuf.getvalue(), file_name='similar_topk_bundle.zip', key="dl_sim_zip")
+            st.download_button('Download Top-K SDF+CSV (no H)', data=zbuf.getvalue(), file_name='similar_topk_bundle.zip', key="dl_sim_zip")
 
     # Footer
     st.markdown(FOOTER_HTML, unsafe_allow_html=True)
