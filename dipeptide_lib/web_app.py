@@ -7,11 +7,24 @@ import zipfile
 import numpy as np
 import pandas as pd
 import streamlit as st
-from rdkit import Chem
-from rdkit.Chem import AllChem, Draw, DataStructs
-from rdkit.Chem.Draw import rdMolDraw2D
-from rdkit.Chem import rdDepictor
-from rdkit.Chem.rdMolDescriptors import GetMorganFingerprintAsBitVect, GetHashedMorganFingerprint
+
+# 可选导入 RDKit（云端可能不可用）
+HAS_RDKIT = True
+try:
+    from rdkit import Chem
+    from rdkit.Chem import AllChem, DataStructs
+    from rdkit.Chem.Draw import rdMolDraw2D
+    from rdkit.Chem import rdDepictor
+    from rdkit.Chem.rdMolDescriptors import GetMorganFingerprintAsBitVect, GetHashedMorganFingerprint
+except Exception:
+    HAS_RDKIT = False
+    Chem = None
+    AllChem = None
+    DataStructs = None
+    rdMolDraw2D = None
+    rdDepictor = None
+    GetMorganFingerprintAsBitVect = None
+    GetHashedMorganFingerprint = None
 
 # 默认数据集指向最大库（可改为其他目录）
 META_CSV = '/data/deepcode/dipeptide_lib/output_nonstandard_LD/metadata.csv'
@@ -241,11 +254,11 @@ def molblock_from_sdf(filepath: str) -> str:
 
 
 def render_mol_2d(mol, legend: str = ""):
-    if mol is None:
+    if not HAS_RDKIT or mol is None:
         return None
     try:
         mc = Chem.Mol(mol)
-        AllChem.Compute2DCoords(mc)
+        rdDepictor.Compute2DCoords(mc)
         d2d = rdMolDraw2D.MolDraw2DCairo(280, 210)
         rdMolDraw2D.PrepareAndDrawMolecule(d2d, mc, legend=legend)
         d2d.FinishDrawing()
@@ -365,7 +378,7 @@ def main():
                             pass
                 st.download_button('打包下载该序列 SDF+CSV', data=zbuf.getvalue(), file_name='pair_results_bundle.zip')
 
-    if run:
+    if HAS_RDKIT and run:
         if uploaded is not None:
             import io
             content = uploaded.read()
