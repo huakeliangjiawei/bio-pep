@@ -54,14 +54,45 @@ def _find_dataset_root(base_dir: str):
             break
     return meta_path, sdf_dir
 
+def _build_no_h_sdf_cache(sdf_dir: str) -> str:
+    """Create a no-H SDF cache directory next to the dataset and return its path."""
+    cache_dir = os.path.join(os.path.expanduser('~'), '.cache', 'dipeptide_lib')
+    out_dir = os.path.join(cache_dir, 'sdf_noH')
+    os.makedirs(out_dir, exist_ok=True)
+    if not HAS_RDKIT:
+        return sdf_dir
+    for fname in os.listdir(sdf_dir):
+        if not fname.lower().endswith('.sdf'):
+            continue
+        src = os.path.join(sdf_dir, fname)
+        dst = os.path.join(out_dir, fname.replace('.sdf', '_noH.sdf'))
+        if os.path.exists(dst):
+            continue
+        try:
+            mols = Chem.SDMolSupplier(src)
+            mol = mols[0] if len(mols) > 0 else None
+            if mol:
+                mol_no_h = Chem.RemoveHs(mol, sanitize=True)
+                with open(dst, 'w') as f:
+                    f.write(Chem.MolToMolBlock(mol_no_h))
+        except Exception:
+            # Fallback: copy original
+            try:
+                with open(src, 'rb') as fsrc, open(dst, 'wb') as fdst:
+                    fdst.write(fsrc.read())
+            except Exception:
+                pass
+    return out_dir
+
+
 def prepare_data_paths():
-    # 1) 仓库相对 data/
+    # 1) repo-relative data/
     repo_data = os.path.join(os.path.dirname(__file__), '..', 'data')
     repo_data = os.path.abspath(repo_data)
     meta1, sdf1 = _find_dataset_root(repo_data)
     if meta1 and sdf1:
-        return meta1, sdf1
-    # 2) secrets.DATA_URL（ZIP）
+        return meta1, _build_no_h_sdf_cache(sdf1)
+    # 2) secrets.DATA_URL (ZIP)
     data_url = ''
     try:
         data_url = st.secrets.get('DATA_URL', '').strip()
@@ -80,8 +111,8 @@ def prepare_data_paths():
             zf.extractall(cache_dir)
         meta2, sdf2 = _find_dataset_root(cache_dir)
         if meta2 and sdf2:
-            return meta2, sdf2
-    # 3) fallback：提示缺失
+            return meta2, _build_no_h_sdf_cache(sdf2)
+    # 3) fallback: not found
     return None, None
 
 META_CSV, SDF_DIR = prepare_data_paths()
