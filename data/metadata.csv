@@ -1,0 +1,101 @@
+id,aa1,aa2,seq,smiles,MW,logP,TPSA,stereochemistry,site_aa1,site_aa2
+pep_0000000,L-alanine,L-alanine,L-alanine-L-alanine,C[C@H](N)C(=O)N[C@@H](C)C(=O)O.[HH],162.100442308,-0.8310999999999995,92.42,explicit,carboxyl_3,amine_2
+pep_0000001,L-alanine,D-alanine,L-alanine-D-alanine,C[C@H](N)C(=O)N[C@H](C)C(=O)O.[HH],162.100442308,-0.8310999999999995,92.42,explicit,carboxyl_3,amine_2
+pep_0000002,L-alanine,L-arginine,L-alanine-L-arginine,C[C@H](N)C(=O)N[C@H](CCCNC(=N)N)C(=O)O.[HH],247.164439532,-1.5877299999999972,154.32,explicit,carboxyl_3,amine_0
+pep_0000003,L-alanine,L-arginine,L-alanine-L-arginine,C[C@H](N)C(=O)N(CCC[C@@H](N)C(=O)O)C(=N)N.[HH],247.164439532,-1.506229999999998,159.52000000000004,explicit,carboxyl_3,amine_5
+pep_0000004,L-alanine,L-arginine,L-alanine-L-arginine,C[C@H](N)C(=O)NC(=N)NCCC[C@@H](N)C(=O)O.[HH],247.164439532,-1.5877299999999972,154.32,explicit,carboxyl_3,amine_7
+pep_0000005,L-alanine,D-arginine,L-alanine-D-arginine,C[C@H](N)C(=O)N[C@@H](CCCNC(=N)N)C(=O)O.[HH],247.164439532,-1.5877299999999972,154.32,explicit,carboxyl_3,amine_0
+pep_0000006,L-alanine,D-arginine,L-alanine-D-arginine,C[C@H](N)C(=O)N(CCC[C@H](N)C(=O)O)C(=N)N.[HH],247.164439532,-1.506229999999998,159.52000000000004,explicit,carboxyl_3,amine_5
+pep_0000007,L-alanine,D-arginine,L-alanine-D-arginine,C[C@H](N)C(=O)NC(=N)NCCC[C@H](N)C(=O)O.[HH],247.164439532,-1.5877299999999972,154.32,explicit,carboxyl_3,amine_7
+pep_0000008,L-alanine,L-asparagine,L-alanine-L-asparagine,C[C@H](N)C(=O)N[C@H](CC(N)=O)C(=O)O.[HH],205.10625596,-1.9755999999999985,135.51,explicit,carboxyl_3,amine_0
+pep_0000009,L-alanine,L-asparagine,L-alanine-L-asparagine,C[C@H](N)C(=O)NC(=O)C[C@@H](N)C(=O)O.[HH],205.10625596,-1.9755999999999976,135.51,explicit,carboxyl_3,amine_5
+pep_0000010,L-alanine,D-asparagine,L-alanine-D-asparagine,C[C@H](N)C(=O)N[C@@H](CC(N)=O)C(=O)O.[HH],205.10625596,-1.9755999999999985,135.51,explicit,carboxyl_3,amine_0
+pep_0000011,L-alanine,D-asparagine,L-alanine-D-asparagine,C[C@H](N)C(=O)NC(=O)C[C@H](N)C(=O)O.[HH],205.10625596,-1.9755999999999976,135.51,explicit,carboxyl_3,amine_5
+pep_0000012,L-alanine,L-aspartic acid,L-alanine-L-aspartic acid,C[C@H](N)C(=O)N[C@H](CC(=O)O)C(=O)O.[HH],206.090271548,-1.376299999999999,129.72,explicit,carboxyl_3,amine_0
+pep_0000013,L-alanine,D-aspartic acid,L-alanine-D-aspartic acid,C[C@H](N)C(=O)N[C@@H](CC(=O)O)C(=O)O.[HH],206.090271548,-1.376299999999999,129.72,explicit,carboxyl_3,amine_0
+pep_0000014,L-alanine,L-cysteine,L-alanine-L-cysteine,C[C@H](N)C(=O)N[C@H](CS)C(=O)O.[HH],194.072513308,-0.9211999999999994,92.42,explicit,carboxyl_3,amine_0
+pep_0000015,L-alanine,D-cysteine,L-alanine-D-cysteine,C[C@H](N)C(=O)N[C@@H](CS)C(=O)O.[HH],194.072513308,-0.9211999999999994,92.42,explicit,carboxyl_3,amine_0
+pep_0000016,L-alanine,L-glutamine,L-alanine-L-glutamine,C[C@H](N)C(=O)N[C@H](CCC(N)=O)C(=O)O.[HH],219.121906024,-1.5854999999999981,135.51,explicit,carboxyl_3,amine_0
+pep_0000017,L-alanine,L-glutamine,L-alanine-L-glutamine,C[C@H](N)C(=O)NC(=O)CC[C@@H](N)C(=O)O.[HH],219.121906024,-1.5854999999999972,135.51,explicit,carboxyl_3,amine_6
+pep_0000018,L-alanine,D-glutamine,L-alanine-D-glutamine,C[C@H](N)C(=O)N[C@@H](CCC(N)=O)C(=O)O.[HH],219.121906024,-1.5854999999999981,135.51,explicit,carboxyl_3,amine_0
+pep_0000019,L-alanine,D-glutamine,L-alanine-D-glutamine,C[C@H](N)C(=O)NC(=O)CC[C@H](N)C(=O)O.[HH],219.121906024,-1.5854999999999972,135.51,explicit,carboxyl_3,amine_6
+pep_0000020,L-alanine,L-glutamic acid,L-alanine-L-glutamic acid,C[C@H](N)C(=O)N[C@H](CCC(=O)O)C(=O)O.[HH],220.105921612,-0.9861999999999993,129.72,explicit,carboxyl_3,amine_0
+pep_0000021,L-alanine,D-glutamic acid,L-alanine-D-glutamic acid,C[C@H](N)C(=O)N[C@@H](CCC(=O)O)C(=O)O.[HH],220.105921612,-0.9861999999999993,129.72,explicit,carboxyl_3,amine_0
+pep_0000022,L-alanine,L-glycine,L-alanine-L-glycine,C[C@H](N)C(=O)NCC(=O)O.[HH],148.084792244,-1.2195999999999996,92.42,explicit,carboxyl_3,amine_0
+pep_0000023,L-alanine,L-histidine,L-alanine-L-histidine,C[C@H](N)C(=O)N[C@H](Cc1c[nH]cn1)C(=O)O.[HH],228.122240372,-0.8851999999999987,121.10000000000001,explicit,carboxyl_3,amine_0
+pep_0000024,L-alanine,D-histidine,L-alanine-D-histidine,C[C@H](N)C(=O)N[C@@H](Cc1c[nH]cn1)C(=O)O.[HH],228.122240372,-0.8851999999999987,121.10000000000001,explicit,carboxyl_3,amine_0
+pep_0000025,L-alanine,L-isoleucine,L-alanine-L-isoleucine,CC[C@H](C)[C@H](NC(=O)[C@H](C)N)C(=O)O.[HH],204.1473925,0.19510000000000033,92.42,explicit,carboxyl_3,amine_5
+pep_0000026,L-alanine,D-isoleucine,L-alanine-D-isoleucine,CC[C@@H](C)[C@@H](NC(=O)[C@H](C)N)C(=O)O.[HH],204.1473925,0.19510000000000033,92.42,explicit,carboxyl_3,amine_5
+pep_0000027,L-alanine,L-leucine,L-alanine-L-leucine,CC(C)C[C@H](NC(=O)[C@H](C)N)C(=O)O.[HH],204.1473925,0.19510000000000033,92.42,explicit,carboxyl_3,amine_5
+pep_0000028,L-alanine,D-leucine,L-alanine-D-leucine,CC(C)C[C@@H](NC(=O)[C@H](C)N)C(=O)O.[HH],204.1473925,0.19510000000000033,92.42,explicit,carboxyl_3,amine_5
+pep_0000029,L-alanine,L-lysine,L-alanine-L-lysine,C[C@H](N)C(=O)N[C@H](CCCCN)C(=O)O.[HH],219.158291532,-0.721999999999998,118.44000000000001,explicit,carboxyl_3,amine_0
+pep_0000030,L-alanine,L-lysine,L-alanine-L-lysine,C[C@H](N)C(=O)NCCCC[C@@H](N)C(=O)O.[HH],219.158291532,-0.721999999999998,118.44000000000001,explicit,carboxyl_3,amine_6
+pep_0000031,L-alanine,D-lysine,L-alanine-D-lysine,C[C@H](N)C(=O)N[C@@H](CCCCN)C(=O)O.[HH],219.158291532,-0.721999999999998,118.44000000000001,explicit,carboxyl_3,amine_0
+pep_0000032,L-alanine,D-lysine,L-alanine-D-lysine,C[C@H](N)C(=O)NCCCC[C@H](N)C(=O)O.[HH],219.158291532,-0.721999999999998,118.44000000000001,explicit,carboxyl_3,amine_6
+pep_0000033,L-alanine,L-methionine,L-alanine-L-methionine,CSCCC[C@H](NC(=O)[C@H](C)N)C(=O)O.[HH],236.1194635,0.2922000000000005,92.42,explicit,carboxyl_3,amine_6
+pep_0000034,L-alanine,D-methionine,L-alanine-D-methionine,CSCCC[C@@H](NC(=O)[C@H](C)N)C(=O)O.[HH],236.1194635,0.2922000000000005,92.42,explicit,carboxyl_3,amine_6
+pep_0000035,L-alanine,L-phenylalanine,L-alanine-L-phenylalanine,C[C@H](N)C(=O)N[C@H](Cc1ccccc1)C(=O)O.[HH],238.131742436,0.3917000000000001,92.42,explicit,carboxyl_3,amine_0
+pep_0000036,L-alanine,D-phenylalanine,L-alanine-D-phenylalanine,C[C@H](N)C(=O)N[C@@H](Cc1ccccc1)C(=O)O.[HH],238.131742436,0.3917000000000001,92.42,explicit,carboxyl_3,amine_0
+pep_0000037,L-alanine,L-proline,L-alanine-L-proline,C[C@H](N)C(=O)N1CCC[C@@H]1C(=O)O.[HH],188.116092372,-0.3447999999999994,83.63000000000001,explicit,carboxyl_3,amine_7
+pep_0000038,L-alanine,D-proline,L-alanine-D-proline,C[C@H](N)C(=O)N1CCC[C@H]1C(=O)O.[HH],188.116092372,-0.3447999999999994,83.63000000000001,explicit,carboxyl_3,amine_7
+pep_0000039,L-alanine,L-serine,L-alanine-L-serine,C[C@H](N)C(=O)N[C@H](CO)C(=O)O.[HH],178.095356928,-1.8586999999999987,112.65000000000002,explicit,carboxyl_3,amine_0
+pep_0000040,L-alanine,D-serine,L-alanine-D-serine,C[C@H](N)C(=O)N[C@@H](CO)C(=O)O.[HH],178.095356928,-1.8586999999999987,112.65000000000002,explicit,carboxyl_3,amine_0
+pep_0000041,L-alanine,L-threonine,L-alanine-L-threonine,C[C@H](N)C(=O)N[C@H](C(=O)O)[C@H](C)O.[HH],192.111006992,-1.470199999999999,112.65,explicit,carboxyl_3,amine_4
+pep_0000042,L-alanine,D-threonine,L-alanine-D-threonine,C[C@H](N)C(=O)N[C@@H](C(=O)O)[C@@H](C)O.[HH],192.111006992,-1.470199999999999,112.65,explicit,carboxyl_3,amine_4
+pep_0000043,L-alanine,L-tryptophan,L-alanine-L-tryptophan,C[C@H](N)C(=O)N[C@H](Cc1c[nH]c2ccccc12)C(=O)O.[HH],277.142641468,0.8729999999999998,108.21,explicit,carboxyl_3,amine_0
+pep_0000044,L-alanine,D-tryptophan,L-alanine-D-tryptophan,C[C@H](N)C(=O)N[C@@H](Cc1c[nH]c2ccccc12)C(=O)O.[HH],277.142641468,0.8729999999999998,108.21,explicit,carboxyl_3,amine_0
+pep_0000045,L-alanine,L-tyrosine,L-alanine-L-tyrosine,C[C@H](N)C(=O)N[C@H](Cc1ccc(O)cc1)C(=O)O.[HH],254.126657056,0.09730000000000011,112.65000000000002,explicit,carboxyl_3,amine_0
+pep_0000046,L-alanine,D-tyrosine,L-alanine-D-tyrosine,C[C@H](N)C(=O)N[C@@H](Cc1ccc(O)cc1)C(=O)O.[HH],254.126657056,0.09730000000000011,112.65000000000002,explicit,carboxyl_3,amine_0
+pep_0000047,L-alanine,L-valine,L-alanine-L-valine,CC(C)[C@H](NC(=O)[C@H](C)N)C(=O)O.[HH],190.131742436,-0.19499999999999945,92.42,explicit,carboxyl_3,amine_4
+pep_0000048,L-alanine,D-valine,L-alanine-D-valine,CC(C)[C@@H](NC(=O)[C@H](C)N)C(=O)O.[HH],190.131742436,-0.19499999999999945,92.42,explicit,carboxyl_3,amine_4
+pep_0000049,L-alanine,L-N-methyl alanine,L-alanine-L-N-methyl alanine,C[C@H](N)C(=O)N(C)[C@H](C)C(=O)O.[HH],176.116092372,-0.4888999999999992,83.63000000000001,explicit,carboxyl_3,amine_2
+pep_0000050,L-alanine,D-N-methyl alanine,L-alanine-D-N-methyl alanine,C[C@H](N)C(=O)N(C)[C@@H](C)C(=O)O.[HH],176.116092372,-0.4888999999999992,83.63000000000001,explicit,carboxyl_3,amine_2
+pep_0000051,L-alanine,L-norleucine,L-alanine-L-norleucine,CCCCC[C@H](NC(=O)[C@H](C)N)C(=O)O.[HH],218.163042564,0.7293000000000005,92.42,explicit,carboxyl_3,amine_6
+pep_0000052,L-alanine,D-norleucine,L-alanine-D-norleucine,CCCCC[C@@H](NC(=O)[C@H](C)N)C(=O)O.[HH],218.163042564,0.7293000000000005,92.42,explicit,carboxyl_3,amine_6
+pep_0000053,L-alanine,L-pyroglutamate,L-alanine-L-pyroglutamate,C[C@H](N)C(=O)N1C[C@H](CC(=O)O)C(=O)NC1=O.[HH],245.10117058,-1.2510999999999988,129.8,explicit,carboxyl_3,amine_2
+pep_0000054,L-alanine,L-pyroglutamate,L-alanine-L-pyroglutamate,C[C@H](N)C(=O)N1C(=O)NC[C@H](CC(=O)O)C1=O.[HH],245.10117058,-1.2510999999999992,129.8,explicit,carboxyl_3,amine_11
+pep_0000055,L-alanine,D-pyroglutamate,L-alanine-D-pyroglutamate,C[C@H](N)C(=O)N1C[C@@H](CC(=O)O)C(=O)NC1=O.[HH],245.10117058,-1.2510999999999988,129.8,explicit,carboxyl_3,amine_2
+pep_0000056,L-alanine,D-pyroglutamate,L-alanine-D-pyroglutamate,C[C@H](N)C(=O)N1C(=O)NC[C@@H](CC(=O)O)C1=O.[HH],245.10117058,-1.2510999999999992,129.8,explicit,carboxyl_3,amine_11
+pep_0000057,D-alanine,L-alanine,D-alanine-L-alanine,C[C@H](NC(=O)[C@@H](C)N)C(=O)O.[HH],162.100442308,-0.8310999999999993,92.42,explicit,carboxyl_3,amine_2
+pep_0000058,D-alanine,D-alanine,D-alanine-D-alanine,C[C@@H](N)C(=O)N[C@H](C)C(=O)O.[HH],162.100442308,-0.8310999999999995,92.42,explicit,carboxyl_3,amine_2
+pep_0000059,D-alanine,L-arginine,D-alanine-L-arginine,C[C@@H](N)C(=O)N[C@H](CCCNC(=N)N)C(=O)O.[HH],247.164439532,-1.5877299999999972,154.32,explicit,carboxyl_3,amine_0
+pep_0000060,D-alanine,L-arginine,D-alanine-L-arginine,C[C@@H](N)C(=O)N(CCC[C@@H](N)C(=O)O)C(=N)N.[HH],247.164439532,-1.506229999999998,159.52000000000004,explicit,carboxyl_3,amine_5
+pep_0000061,D-alanine,L-arginine,D-alanine-L-arginine,C[C@@H](N)C(=O)NC(=N)NCCC[C@@H](N)C(=O)O.[HH],247.164439532,-1.5877299999999972,154.32,explicit,carboxyl_3,amine_7
+pep_0000062,D-alanine,D-arginine,D-alanine-D-arginine,C[C@@H](N)C(=O)N[C@@H](CCCNC(=N)N)C(=O)O.[HH],247.164439532,-1.5877299999999972,154.32,explicit,carboxyl_3,amine_0
+pep_0000063,D-alanine,D-arginine,D-alanine-D-arginine,C[C@@H](N)C(=O)N(CCC[C@H](N)C(=O)O)C(=N)N.[HH],247.164439532,-1.506229999999998,159.52000000000004,explicit,carboxyl_3,amine_5
+pep_0000064,D-alanine,D-arginine,D-alanine-D-arginine,C[C@@H](N)C(=O)NC(=N)NCCC[C@H](N)C(=O)O.[HH],247.164439532,-1.5877299999999972,154.32,explicit,carboxyl_3,amine_7
+pep_0000065,D-alanine,L-asparagine,D-alanine-L-asparagine,C[C@@H](N)C(=O)N[C@H](CC(N)=O)C(=O)O.[HH],205.10625596,-1.9755999999999985,135.51,explicit,carboxyl_3,amine_0
+pep_0000066,D-alanine,L-asparagine,D-alanine-L-asparagine,C[C@@H](N)C(=O)NC(=O)C[C@@H](N)C(=O)O.[HH],205.10625596,-1.9755999999999976,135.51,explicit,carboxyl_3,amine_5
+pep_0000067,D-alanine,D-asparagine,D-alanine-D-asparagine,C[C@@H](N)C(=O)N[C@@H](CC(N)=O)C(=O)O.[HH],205.10625596,-1.9755999999999985,135.51,explicit,carboxyl_3,amine_0
+pep_0000068,D-alanine,D-asparagine,D-alanine-D-asparagine,C[C@@H](N)C(=O)NC(=O)C[C@H](N)C(=O)O.[HH],205.10625596,-1.9755999999999976,135.51,explicit,carboxyl_3,amine_5
+pep_0000069,D-alanine,L-aspartic acid,D-alanine-L-aspartic acid,C[C@@H](N)C(=O)N[C@H](CC(=O)O)C(=O)O.[HH],206.090271548,-1.376299999999999,129.72,explicit,carboxyl_3,amine_0
+pep_0000070,D-alanine,D-aspartic acid,D-alanine-D-aspartic acid,C[C@@H](N)C(=O)N[C@@H](CC(=O)O)C(=O)O.[HH],206.090271548,-1.376299999999999,129.72,explicit,carboxyl_3,amine_0
+pep_0000071,D-alanine,L-cysteine,D-alanine-L-cysteine,C[C@@H](N)C(=O)N[C@H](CS)C(=O)O.[HH],194.072513308,-0.9211999999999994,92.42,explicit,carboxyl_3,amine_0
+pep_0000072,D-alanine,D-cysteine,D-alanine-D-cysteine,C[C@@H](N)C(=O)N[C@@H](CS)C(=O)O.[HH],194.072513308,-0.9211999999999994,92.42,explicit,carboxyl_3,amine_0
+pep_0000073,D-alanine,L-glutamine,D-alanine-L-glutamine,C[C@@H](N)C(=O)N[C@H](CCC(N)=O)C(=O)O.[HH],219.121906024,-1.5854999999999981,135.51,explicit,carboxyl_3,amine_0
+pep_0000074,D-alanine,L-glutamine,D-alanine-L-glutamine,C[C@@H](N)C(=O)NC(=O)CC[C@@H](N)C(=O)O.[HH],219.121906024,-1.5854999999999972,135.51,explicit,carboxyl_3,amine_6
+pep_0000075,D-alanine,D-glutamine,D-alanine-D-glutamine,C[C@@H](N)C(=O)N[C@@H](CCC(N)=O)C(=O)O.[HH],219.121906024,-1.5854999999999981,135.51,explicit,carboxyl_3,amine_0
+pep_0000076,D-alanine,D-glutamine,D-alanine-D-glutamine,C[C@@H](N)C(=O)NC(=O)CC[C@H](N)C(=O)O.[HH],219.121906024,-1.5854999999999972,135.51,explicit,carboxyl_3,amine_6
+pep_0000077,D-alanine,L-glutamic acid,D-alanine-L-glutamic acid,C[C@@H](N)C(=O)N[C@H](CCC(=O)O)C(=O)O.[HH],220.105921612,-0.9861999999999993,129.72,explicit,carboxyl_3,amine_0
+pep_0000078,D-alanine,D-glutamic acid,D-alanine-D-glutamic acid,C[C@@H](N)C(=O)N[C@@H](CCC(=O)O)C(=O)O.[HH],220.105921612,-0.9861999999999993,129.72,explicit,carboxyl_3,amine_0
+pep_0000079,D-alanine,L-glycine,D-alanine-L-glycine,C[C@@H](N)C(=O)NCC(=O)O.[HH],148.084792244,-1.2195999999999996,92.42,explicit,carboxyl_3,amine_0
+pep_0000080,D-alanine,L-histidine,D-alanine-L-histidine,C[C@@H](N)C(=O)N[C@H](Cc1c[nH]cn1)C(=O)O.[HH],228.122240372,-0.8851999999999987,121.10000000000001,explicit,carboxyl_3,amine_0
+pep_0000081,D-alanine,D-histidine,D-alanine-D-histidine,C[C@@H](N)C(=O)N[C@@H](Cc1c[nH]cn1)C(=O)O.[HH],228.122240372,-0.8851999999999987,121.10000000000001,explicit,carboxyl_3,amine_0
+pep_0000082,D-alanine,L-isoleucine,D-alanine-L-isoleucine,CC[C@H](C)[C@H](NC(=O)[C@@H](C)N)C(=O)O.[HH],204.1473925,0.19510000000000033,92.42,explicit,carboxyl_3,amine_5
+pep_0000083,D-alanine,D-isoleucine,D-alanine-D-isoleucine,CC[C@@H](C)[C@@H](NC(=O)[C@@H](C)N)C(=O)O.[HH],204.1473925,0.19510000000000033,92.42,explicit,carboxyl_3,amine_5
+pep_0000084,D-alanine,L-leucine,D-alanine-L-leucine,CC(C)C[C@H](NC(=O)[C@@H](C)N)C(=O)O.[HH],204.1473925,0.19510000000000033,92.42,explicit,carboxyl_3,amine_5
+pep_0000085,D-alanine,D-leucine,D-alanine-D-leucine,CC(C)C[C@@H](NC(=O)[C@@H](C)N)C(=O)O.[HH],204.1473925,0.19510000000000033,92.42,explicit,carboxyl_3,amine_5
+pep_0000086,D-alanine,L-lysine,D-alanine-L-lysine,C[C@@H](N)C(=O)N[C@H](CCCCN)C(=O)O.[HH],219.158291532,-0.721999999999998,118.44000000000001,explicit,carboxyl_3,amine_0
+pep_0000087,D-alanine,L-lysine,D-alanine-L-lysine,C[C@@H](N)C(=O)NCCCC[C@@H](N)C(=O)O.[HH],219.158291532,-0.721999999999998,118.44000000000001,explicit,carboxyl_3,amine_6
+pep_0000088,D-alanine,D-lysine,D-alanine-D-lysine,C[C@@H](N)C(=O)N[C@@H](CCCCN)C(=O)O.[HH],219.158291532,-0.721999999999998,118.44000000000001,explicit,carboxyl_3,amine_0
+pep_0000089,D-alanine,D-lysine,D-alanine-D-lysine,C[C@@H](N)C(=O)NCCCC[C@H](N)C(=O)O.[HH],219.158291532,-0.721999999999998,118.44000000000001,explicit,carboxyl_3,amine_6
+pep_0000090,D-alanine,L-methionine,D-alanine-L-methionine,CSCCC[C@H](NC(=O)[C@@H](C)N)C(=O)O.[HH],236.1194635,0.2922000000000005,92.42,explicit,carboxyl_3,amine_6
+pep_0000091,D-alanine,D-methionine,D-alanine-D-methionine,CSCCC[C@@H](NC(=O)[C@@H](C)N)C(=O)O.[HH],236.1194635,0.2922000000000005,92.42,explicit,carboxyl_3,amine_6
+pep_0000092,D-alanine,L-phenylalanine,D-alanine-L-phenylalanine,C[C@@H](N)C(=O)N[C@H](Cc1ccccc1)C(=O)O.[HH],238.131742436,0.3917000000000001,92.42,explicit,carboxyl_3,amine_0
+pep_0000093,D-alanine,D-phenylalanine,D-alanine-D-phenylalanine,C[C@@H](N)C(=O)N[C@@H](Cc1ccccc1)C(=O)O.[HH],238.131742436,0.3917000000000001,92.42,explicit,carboxyl_3,amine_0
+pep_0000094,D-alanine,L-proline,D-alanine-L-proline,C[C@@H](N)C(=O)N1CCC[C@@H]1C(=O)O.[HH],188.116092372,-0.3447999999999994,83.63000000000001,explicit,carboxyl_3,amine_7
+pep_0000095,D-alanine,D-proline,D-alanine-D-proline,C[C@@H](N)C(=O)N1CCC[C@H]1C(=O)O.[HH],188.116092372,-0.3447999999999994,83.63000000000001,explicit,carboxyl_3,amine_7
+pep_0000096,D-alanine,L-serine,D-alanine-L-serine,C[C@@H](N)C(=O)N[C@H](CO)C(=O)O.[HH],178.095356928,-1.8586999999999987,112.65000000000002,explicit,carboxyl_3,amine_0
+pep_0000097,D-alanine,D-serine,D-alanine-D-serine,C[C@@H](N)C(=O)N[C@@H](CO)C(=O)O.[HH],178.095356928,-1.8586999999999987,112.65000000000002,explicit,carboxyl_3,amine_0
+pep_0000098,D-alanine,L-threonine,D-alanine-L-threonine,C[C@H](O)[C@H](NC(=O)[C@@H](C)N)C(=O)O.[HH],192.111006992,-1.4701999999999986,112.64999999999999,explicit,carboxyl_3,amine_4
+pep_0000099,D-alanine,D-threonine,D-alanine-D-threonine,C[C@@H](N)C(=O)N[C@@H](C(=O)O)[C@@H](C)O.[HH],192.111006992,-1.470199999999999,112.65,explicit,carboxyl_3,amine_4

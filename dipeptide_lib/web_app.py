@@ -1,0 +1,449 @@
+#!/usr/bin/env python3
+import os
+import json
+import io
+import requests
+import zipfile
+import numpy as np
+import pandas as pd
+import streamlit as st
+from rdkit import Chem
+from rdkit.Chem import AllChem, Draw, DataStructs
+from rdkit.Chem.Draw import rdMolDraw2D
+from rdkit.Chem import rdDepictor
+from rdkit.Chem.rdMolDescriptors import GetMorganFingerprintAsBitVect, GetHashedMorganFingerprint
+
+# 默认数据集指向最大库（可改为其他目录）
+META_CSV = '/data/deepcode/dipeptide_lib/output_nonstandard_LD/metadata.csv'
+SDF_DIR = '/data/deepcode/dipeptide_lib/output_nonstandard_LD/sdf'
+N_BITS = 1024
+RADIUS = 6
+TOPK = 10
+
+THEME_CSS = """
+<style>
+:root {
+  --warm-amber: #E89B3C;
+  --warm-orange: #FF8C42;
+  --warm-coral: #FF6F61;
+  --ink: #2D3142;
+  --muted: #6B7280;
+  --paper: #FAF6F1;
+}
+
+/* App background */
+.stApp {
+  background: linear-gradient(180deg, rgba(255,236,215,0.6) 0%, rgba(250,246,241,0.7) 35%, rgba(255,255,255,0.9) 100%),
+              radial-gradient(1200px 600px at 10% 0%, rgba(255,161,122,0.18) 0%, rgba(255,161,122,0.0) 70%),
+              radial-gradient(900px 500px at 90% 10%, rgba(255,211,158,0.18) 0%, rgba(255,211,158,0.0) 70%);
+}
+
+/* Container */
+.block-container {
+  padding-top: 1rem;
+  max-width: 1200px;
+}
+
+/* Top hero banner */
+.hero {
+  width: 100%;
+  background: linear-gradient(135deg, var(--warm-amber) 0%, var(--warm-orange) 50%, var(--warm-coral) 100%);
+  color: white;
+  border-radius: 12px;
+  padding: 22px 28px;
+  box-shadow: 0 8px 18px rgba(0,0,0,0.12);
+  position: relative;
+  overflow: hidden;
+}
+.hero h1 {
+  margin: 0;
+  font-size: 28px;
+  letter-spacing: 0.6px;
+}
+.hero p {
+  margin: 6px 0 0 0;
+  color: #fffde7;
+}
+.hero .molecule {
+  position: absolute;
+  right: 18px;
+  bottom: -8px;
+  opacity: 0.22;
+}
+
+/* Cards and expanders */
+.st-expander {
+  background: #fff;
+  border: 1px solid rgba(232, 155, 60, 0.25);
+  box-shadow: 0 6px 14px rgba(232, 155, 60, 0.15);
+  border-radius: 12px !important;
+}
+.streamlit-expanderHeader {
+  font-weight: 600;
+  color: var(--ink);
+}
+
+/* Buttons */
+.stButton>button {
+  background: var(--warm-orange);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 0.5rem 0.9rem;
+  font-weight: 600;
+  box-shadow: 0 4px 10px rgba(255,140,66,0.3);
+}
+.stButton>button:hover {
+  background: #ff7a22;
+}
+
+/* Selects and sliders */
+.stSelectbox, .stSlider {
+  background: #fffaf4;
+  border-radius: 10px;
+}
+
+/* Sidebar */
+.css-1d391kg, .stSidebar { /* Streamlit internal class may change, best effort */
+  background: rgba(255,245,235,0.6);
+}
+
+/* Footer */
+.footer {
+  width: 100%;
+  margin-top: 28px;
+  padding: 14px 0;
+  color: var(--muted);
+  border-top: 1px solid rgba(0,0,0,0.08);
+  text-align: center;
+}
+.footer strong { color: var(--ink); }
+</style>
+"""
+
+HERO_HTML = """
+<div class="hero">
+  <div style="display:flex; align-items:flex-start; gap:16px;">
+    <div style="flex:1 1 auto;">
+      <h1>二肽结构相似检索 · Dipeptide Explorer</h1>
+      <p>两种查询方式：上传 SDF/SMILES 相似 Top-K；或按 L/D 与氨基酸类型指定检索。指纹：Morgan radius=6, nBits=1024。</p>
+    </div>
+    <svg class="molecule" width="160" height="160" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#fff" stop-opacity="0.9"/>
+          <stop offset="100%" stop-color="#fff" stop-opacity="0.4"/>
+        </linearGradient>
+      </defs>
+      <g fill="url(#g)" stroke="white" stroke-opacity="0.6">
+        <circle cx="20" cy="50" r="8"/>
+        <circle cx="60" cy="40" r="8"/>
+        <circle cx="100" cy="60" r="8"/>
+        <circle cx="140" cy="50" r="8"/>
+        <circle cx="180" cy="70" r="8"/>
+        <line x1="20" y1="50" x2="60" y2="40"/>
+        <line x1="60" y1="40" x2="100" y2="60"/>
+        <line x1="100" y1="60" x2="140" y2="50"/>
+        <line x1="140" y1="50" x2="180" y2="70"/>
+        <circle cx="40" cy="120" r="8"/>
+        <circle cx="80" cy="130" r="8"/>
+        <circle cx="120" cy="110" r="8"/>
+        <circle cx="160" cy="130" r="8"/>
+        <line x1="40" y1="120" x2="80" y2="130"/>
+        <line x1="80" y1="130" x2="120" y2="110"/>
+        <line x1="120" y1="110" x2="160" y2="130"/>
+      </g>
+    </svg>
+  </div>
+</div>
+"""
+
+FOOTER_HTML = """
+<div class="footer">
+  <span>作者：<strong>Jiawei Liang</strong>; 单位：<strong>Ni Lab in SZU</strong></span>
+</div>
+"""
+
+@st.cache_resource(show_spinner=False)
+def load_resources():
+    df = pd.read_csv(META_CSV)
+    ids = [str(r['id']) for _, r in df.iterrows()]
+    smiles = [str(r['smiles']) for _, r in df.iterrows()]
+    id_to_row = {str(r['id']): r for _, r in df.iterrows()}
+    # 预生成位指纹以加速相似计算
+    fps = []
+    for smi in smiles:
+        m = Chem.MolFromSmiles(smi)
+        if m is None:
+            fps.append(None)
+            continue
+        fp = GetMorganFingerprintAsBitVect(m, radius=RADIUS, nBits=N_BITS)
+        fps.append(fp)
+    return df, ids, smiles, fps, id_to_row
+
+
+def file_uploader_to_mol(uploaded):
+    content = uploaded.read()
+    # Try SDF first
+    try:
+        suppl = Chem.ForwardSDMolSupplier(io.BytesIO(content))  # type: ignore
+        for m in suppl:
+            if m is not None:
+                return m
+    except Exception:
+        pass
+    # Try SMILES text
+    try:
+        txt = content.decode('utf-8').strip()
+        m = Chem.MolFromSmiles(txt)
+        if m is not None:
+            return m
+    except Exception:
+        pass
+    return None
+
+
+def smiles_to_count_vec(smi: str, nBits: int = N_BITS, radius: int = RADIUS):
+    m = Chem.MolFromSmiles(smi)
+    if m is None:
+        return None
+    sv = GetHashedMorganFingerprint(m, radius, nBits=nBits)
+    arr = np.zeros((nBits,), dtype=np.float32)
+    for k, v in sv.GetNonzeroElements().items():
+        arr[k % nBits] = float(v)
+    n = np.linalg.norm(arr)
+    if n == 0:
+        n = 1.0
+    return (arr / n).astype(np.float32), m
+
+
+def get_bit_fp(m):
+    return AllChem.GetMorganFingerprintAsBitVect(m, radius=RADIUS, nBits=N_BITS)
+
+
+def rerank_with_tanimoto(query_mol, candidate_mols):
+    qfp = get_bit_fp(query_mol)
+    sims = []
+    for cid, mol in candidate_mols:
+        if mol is None:
+            sims.append((cid, 0.0))
+            continue
+        cfp = get_bit_fp(mol)
+        s = DataStructs.TanimotoSimilarity(qfp, cfp)
+        sims.append((cid, float(s)))
+    sims.sort(key=lambda x: x[1], reverse=True)
+    return sims
+
+
+def molblock_from_sdf(filepath: str) -> str:
+    with open(filepath, 'r') as f:
+        return f.read()
+
+
+def render_mol_2d(mol, legend: str = ""):
+    if mol is None:
+        return None
+    try:
+        mc = Chem.Mol(mol)
+        AllChem.Compute2DCoords(mc)
+        d2d = rdMolDraw2D.MolDraw2DCairo(280, 210)
+        rdMolDraw2D.PrepareAndDrawMolecule(d2d, mc, legend=legend)
+        d2d.FinishDrawing()
+        return d2d.GetDrawingText()
+    except Exception:
+        return None
+
+
+def render_mol_3d_py3dmol(sdf_path: str, width=420, height=320):
+    import py3Dmol
+    molblock = molblock_from_sdf(sdf_path)
+    view = py3Dmol.view(width=width, height=height)
+    view.addModel(molblock, 'sdf')
+    view.setStyle({'stick': {'colorscheme': 'orangeCarbon'}})
+    view.zoomTo()
+    return view
+
+
+def main():
+    st.set_page_config(page_title='Dipeptide Explorer', layout='wide', initial_sidebar_state='collapsed')
+    # inject theme & hero
+    st.markdown(THEME_CSS, unsafe_allow_html=True)
+    st.markdown(HERO_HTML, unsafe_allow_html=True)
+
+    df, ids, smiles, fps, id_to_row = load_resources()
+
+    # Optional: load R-side features if present
+    r_feat_path = '/data/deepcode/dipeptide_lib/output/peptide_features.csv'
+    r_df = None
+    if os.path.exists(r_feat_path):
+        try:
+            r_df = pd.read_csv(r_feat_path)
+        except Exception:
+            r_df = None
+
+    col1, col2 = st.columns([2, 1])
+    with col1:
+        st.subheader('方式一：相似检索')
+        query_smiles = st.text_input('输入 SMILES', '')
+        uploaded = st.file_uploader('或上传 SDF/SMILES 文件', type=['sdf', 'mol', 'smi', 'txt'])
+        topk = st.slider('Top-K 返回数量', 5, 50, TOPK)
+        run = st.button('开始检索')
+        st.divider()
+        st.subheader('方式二：按 L/D 与氨基酸类型检索')
+        ld1 = st.selectbox('第一个氨基酸 L/D', ['L','D'])
+        aa1 = st.selectbox('第一个氨基酸类型', sorted(set([x.split('-',1)[1] for x in df['aa1'] if '-' in x])))
+        ld2 = st.selectbox('第二个氨基酸 L/D', ['L','D'])
+        aa2 = st.selectbox('第二个氨基酸类型', sorted(set([x.split('-',1)[1] for x in df['aa2'] if '-' in x])))
+        run_pair = st.button('检索该二肽')
+    with col2:
+        st.subheader('库统计')
+        st.metric('分子数量', f"{len(ids)}")
+        st.caption('数据来自扩展非天然 + D 型全集，不去重。')
+
+    query_mol = None
+    # Pair query by AA symbols
+    if 'run_pair' not in st.session_state:
+        st.session_state['run_pair'] = False
+    if run_pair:
+        st.session_state['run_pair'] = True
+    if st.session_state.get('run_pair'):
+        n1 = f"{ld1}-{aa1}"
+        n2 = f"{ld2}-{aa2}"
+        target_seq = f"{n1}-{n2}"
+        hits = df[df['seq'] == target_seq]
+        if hits.empty:
+            st.warning(f'未找到序列 {target_seq} 对应的二肽，请检查氨基酸符号或是否在库内。')
+        else:
+            st.subheader('按符号检索结果')
+            export_rows2 = []
+            export_sdf_paths2 = []
+            for _, row in hits.iterrows():
+                cid = row['id']
+                sdf_path = os.path.join(SDF_DIR, f"{cid}.sdf")
+                with st.expander(f"{cid}  |  {row['seq']}  |  MW={row['MW']:.1f}  logP={row['logP']:.2f}  TPSA={row['TPSA']:.1f}"):
+                    cols = st.columns([1,2])
+                    with cols[0]:
+                        img = render_mol_2d(Chem.MolFromSmiles(row['smiles']), legend=cid)
+                        if img:
+                            st.image(img)
+                        st.download_button('下载 SDF', data=open(sdf_path,'rb').read(), file_name=f"{cid}.sdf")
+                    with cols[1]:
+                        try:
+                            view = render_mol_3d_py3dmol(sdf_path)
+                            st.components.v1.html(view._make_html(), height=340)
+                        except Exception:
+                            st.info('3D 视图不可用，显示 2D 图。')
+                        if r_df is not None:
+                            rr = r_df[r_df['id'] == cid]
+                            if not rr.empty:
+                                st.markdown('R 侧特征:')
+                                rrow = rr.iloc[0]
+                                st.write({
+                                    'seq_one': rrow.get('seq_one'),
+                                    'MW_R': rrow.get('MW_R'),
+                                    'hydrophobicity': rrow.get('hydrophobicity'),
+                                    'pI': rrow.get('pI'),
+                                    'aIndex': rrow.get('aIndex'),
+                                    'agree_MW': rrow.get('agree_MW')
+                                })
+                export_rows2.append({k: row[k] for k in ['id','aa1','aa2','seq','smiles','MW','logP','TPSA']})
+                export_sdf_paths2.append(sdf_path)
+            # export bundle
+            if export_rows2:
+                import io, zipfile
+                out_csv = io.StringIO()
+                pd.DataFrame(export_rows2).to_csv(out_csv, index=False)
+                out_csv_bytes = out_csv.getvalue().encode('utf-8')
+                st.download_button('下载该序列的 CSV', data=out_csv_bytes, file_name='pair_results.csv')
+                zbuf = io.BytesIO()
+                with zipfile.ZipFile(zbuf, 'w', zipfile.ZIP_DEFLATED) as zf:
+                    zf.writestr('pair_results.csv', out_csv_bytes)
+                    for pth in export_sdf_paths2:
+                        try:
+                            zf.write(pth, arcname=os.path.basename(pth))
+                        except Exception:
+                            pass
+                st.download_button('打包下载该序列 SDF+CSV', data=zbuf.getvalue(), file_name='pair_results_bundle.zip')
+
+    if run:
+        if uploaded is not None:
+            import io
+            content = uploaded.read()
+            try:
+                # Try SDF supplier
+                suppl = Chem.ForwardSDMolSupplier(io.BytesIO(content))  # type: ignore
+                for m in suppl:
+                    if m is not None:
+                        query_mol = m
+                        break
+            except Exception:
+                pass
+            if query_mol is None:
+                try:
+                    txt = content.decode('utf-8').strip()
+                    query_mol = Chem.MolFromSmiles(txt)
+                    query_smiles = txt
+                except Exception:
+                    pass
+        if query_mol is None and query_smiles:
+            query_mol = Chem.MolFromSmiles(query_smiles)
+
+        if query_mol is None:
+            st.error('无法解析输入，请提供有效的 SMILES 或 SDF 文件。')
+            st.markdown(FOOTER_HTML, unsafe_allow_html=True)
+            return
+
+        # 位指纹 + Tanimoto 全库扫描（Top-K）
+        qfp = GetMorganFingerprintAsBitVect(query_mol, radius=RADIUS, nBits=N_BITS)
+        sims = []
+        for cid, fp in zip(ids, fps):
+            if fp is None:
+                sims.append((cid, 0.0))
+            else:
+                sims.append((cid, float(DataStructs.TanimotoSimilarity(qfp, fp))))
+        sims.sort(key=lambda x: x[1], reverse=True)
+        ranked = sims[:topk]
+
+        st.subheader('结果')
+        export_rows = []
+        export_sdf_paths = []
+        for cid, tanimoto in ranked:
+            row = id_to_row[cid]
+            sdf_path = os.path.join(SDF_DIR, f"{cid}.sdf")
+            with st.expander(f"{cid}  |  Tanimoto={tanimoto:.3f}  |  {row['seq']}  |  MW={row['MW']:.1f}  logP={row['logP']:.2f}  TPSA={row['TPSA']:.1f}"):
+                cols = st.columns([1,2])
+                with cols[0]:
+                    img = render_mol_2d(Chem.MolFromSmiles(row['smiles']), legend=cid)
+                    if img:
+                        st.image(img)
+                    st.download_button('下载 SDF', data=open(sdf_path,'rb').read(), file_name=f"{cid}.sdf")
+                with cols[1]:
+                    try:
+                        view = render_mol_3d_py3dmol(sdf_path)
+                        st.components.v1.html(view._make_html(), height=340)
+                    except Exception:
+                        st.info('3D 视图不可用，显示 2D 图。')
+                export_rows.append({k: row[k] for k in ['id','aa1','aa2','seq','smiles','MW','logP','TPSA']})
+                export_sdf_paths.append(sdf_path)
+        # 打包下载
+        if export_rows:
+            import io, zipfile
+            out_csv = io.StringIO()
+            pd.DataFrame(export_rows).to_csv(out_csv, index=False)
+            out_csv_bytes = out_csv.getvalue().encode('utf-8')
+            st.download_button('下载该结果的 CSV', data=out_csv_bytes, file_name='similar_results.csv')
+            zbuf = io.BytesIO()
+            with zipfile.ZipFile(zbuf, 'w', zipfile.ZIP_DEFLATED) as zf:
+                zf.writestr('similar_results.csv', out_csv_bytes)
+                for pth in export_sdf_paths:
+                    try:
+                        zf.write(pth, arcname=os.path.basename(pth))
+                    except Exception:
+                        pass
+            st.download_button('打包下载 Top-K SDF+CSV', data=zbuf.getvalue(), file_name='similar_topk_bundle.zip')
+
+    # Footer
+    st.markdown(FOOTER_HTML, unsafe_allow_html=True)
+
+if __name__ == '__main__':
+    main()
