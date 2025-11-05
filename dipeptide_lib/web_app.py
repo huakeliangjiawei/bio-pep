@@ -236,19 +236,47 @@ def load_resources():
     ids = [str(r['id']) for _, r in df.iterrows()]
     smiles = [str(r['smiles']) for _, r in df.iterrows()]
     id_to_row = {str(r['id']): r for _, r in df.iterrows()}
-    # 预生成位指纹以加速相似计算（若 RDKit 不可用则填 None）
+    # 预生成多种指纹以加速（若 RDKit 不可用则填 None）
     fps = []
+    fps_multi = []  # 每个分子一个 dict：{'ECFP6','ECFP4','MACCS166','AtomPair','TopologicalTorsion','LayeredFP'}
     if HAS_RDKIT:
         for smi in smiles:
             m = Chem.MolFromSmiles(smi)
             if m is None:
                 fps.append(None)
+                fps_multi.append(None)
                 continue
-            fp = GetMorganFingerprintAsBitVect(m, radius=RADIUS, nBits=N_BITS)
-            fps.append(fp)
+            fp_ecfp6 = GetMorganFingerprintAsBitVect(m, radius=6, nBits=N_BITS)
+            fp_ecfp4 = GetMorganFingerprintAsBitVect(m, radius=4, nBits=N_BITS)
+            try:
+                fp_maccs = MACCSkeys.GenMACCSKeys(m)
+            except Exception:
+                fp_maccs = None
+            try:
+                fp_atompair = rdMolDescriptors.GetHashedAtomPairFingerprint(m, nBits=N_BITS)
+            except Exception:
+                fp_atompair = None
+            try:
+                fp_tt = rdMolDescriptors.GetHashedTopologicalTorsionFingerprint(m, nBits=N_BITS)
+            except Exception:
+                fp_tt = None
+            try:
+                fp_layered = rdMolDescriptors.GetLayeredFingerprint(m)
+            except Exception:
+                fp_layered = None
+            fps.append(fp_ecfp6)
+            fps_multi.append({
+                'ECFP6': fp_ecfp6,
+                'ECFP4': fp_ecfp4,
+                'MACCS166': fp_maccs,
+                'AtomPair': fp_atompair,
+                'TopologicalTorsion': fp_tt,
+                'LayeredFP': fp_layered,
+            })
     else:
         fps = [None] * len(smiles)
-    return df, ids, smiles, fps, id_to_row
+        fps_multi = [None] * len(smiles)
+    return df, ids, smiles, fps, id_to_row, fps_multi
 
 
 def file_uploader_to_mol(uploaded):
