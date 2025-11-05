@@ -419,7 +419,7 @@ def main():
                                 img = None
                         if img:
                             st.image(img)
-                        st.download_button('下载 SDF', data=open(sdf_path,'rb').read(), file_name=f"{cid}.sdf")
+                        st.download_button('下载 SDF', data=open(sdf_path,'rb').read(), file_name=f"{cid}.sdf", key=f"dl_sdf_pair_{cid}")
                     with cols[1]:
                         try:
                             view = render_mol_3d_py3dmol(sdf_path)
@@ -447,7 +447,7 @@ def main():
                 out_csv = io.StringIO()
                 pd.DataFrame(export_rows2).to_csv(out_csv, index=False)
                 out_csv_bytes = out_csv.getvalue().encode('utf-8')
-                st.download_button('下载该序列的 CSV', data=out_csv_bytes, file_name='pair_results.csv')
+                st.download_button('下载该序列的 CSV', data=out_csv_bytes, file_name='pair_results.csv', key="dl_pair_csv")
                 zbuf = io.BytesIO()
                 with zipfile.ZipFile(zbuf, 'w', zipfile.ZIP_DEFLATED) as zf:
                     zf.writestr('pair_results.csv', out_csv_bytes)
@@ -514,7 +514,7 @@ def main():
                             img = None
                     if img:
                         st.image(img)
-                    st.download_button('下载 SDF', data=open(sdf_path,'rb').read(), file_name=f"{cid}.sdf")
+                    st.download_button('下载 SDF', data=open(sdf_path,'rb').read(), file_name=f"{cid}.sdf", key=f"dl_sdf_sim_{cid}")
                 with cols[1]:
                     try:
                         view = render_mol_3d_py3dmol(sdf_path)
@@ -538,7 +538,7 @@ def main():
                         zf.write(pth, arcname=os.path.basename(pth))
                     except Exception:
                         pass
-            st.download_button('打包下载 Top-K SDF+CSV', data=zbuf.getvalue(), file_name='similar_topk_bundle.zip')
+            st.download_button('打包下载 Top-K SDF+CSV', data=zbuf.getvalue(), file_name='similar_topk_bundle.zip', key="dl_sim_zip")
 
     # Footer
     st.markdown(FOOTER_HTML, unsafe_allow_html=True)
