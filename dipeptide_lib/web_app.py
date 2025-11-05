@@ -39,7 +39,7 @@ def _find_dataset_root(base_dir: str):
     for root, dirs, files in os.walk(base_dir):
         if 'metadata.csv' in files and meta_path is None:
             meta_path = os.path.join(root, 'metadata.csv')
-        # 找到含有至少一个 .sdf 文件的目录
+        # Find a directory that contains at least one .sdf file
         if sdf_dir is None:
             for d in dirs:
                 cand = os.path.join(root, d)
@@ -275,8 +275,8 @@ HERO_HTML = """
 <div class="hero">
   <div style="display:flex; align-items:flex-start; gap:16px;">
     <div style="flex:1 1 auto;">
-      <h1>二肽结构相似检索 · Dipeptide Explorer</h1>
-      <p>两种查询方式：上传 SDF/SMILES 相似 Top-K；或按 L/D 与氨基酸类型指定检索。指纹：Morgan radius=6, nBits=1024。</p>
+      <h1>Dipeptide Explorer · Structural Similarity Search</h1>
+      <p>Two query modes: upload SDF/SMILES for Top-K similarity; or query by L/D and amino acid types. Fingerprints: Morgan radius=6, nBits=1024.</p>
     </div>
     <svg class="molecule" width="160" height="160" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
       <defs>
@@ -322,7 +322,7 @@ def load_resources():
     id_to_row = {str(r['id']): r for _, r in df.iterrows()}
     # 预生成多种指纹以加速（若 RDKit 不可用则填 None）
     fps = []
-    fps_multi = []  # 每个分子一个 dict：{'ECFP6','ECFP4','MACCS166','AtomPair','TopologicalTorsion','LayeredFP'}
+    fps_multi = []  # per-molecule dict: {'ECFP6','ECFP4','MACCS166','AtomPair','TopologicalTorsion','LayeredFP'}
     if HAS_RDKIT:
         for smi in smiles:
             m = Chem.MolFromSmiles(smi)
@@ -464,11 +464,11 @@ def main():
     # inject theme & hero
     st.markdown(THEME_CSS, unsafe_allow_html=True)
     st.markdown(HERO_HTML, unsafe_allow_html=True)
-    st.caption(f"RDKit状态：{'可用' if HAS_RDKIT else '不可用'}")
+    st.caption(f"RDKit status: {'available' if HAS_RDKIT else 'unavailable'}")
     if not HAS_RDKIT and RDKIT_IMPORT_ERROR:
         st.caption(f"RDKit导入错误：{RDKIT_IMPORT_ERROR}")
 
-    # 数据可用性检查，避免云端缺失文件时报错
+    # Data availability check to avoid errors when files are missing in cloud
     if not (META_CSV and SDF_DIR and os.path.exists(META_CSV) and os.path.isdir(SDF_DIR)):
         st.error('Data not found: please include data/metadata.csv and data/sdf/ in the repo, or set DATA_URL in App Settings -> Secrets to a ZIP containing metadata.csv and sdf/.')
         st.caption('The app tried to download from DATA_URL and locate files recursively but found no valid structure. Ensure the ZIP contains metadata.csv and an sdf/ directory (possibly under a subfolder).')
