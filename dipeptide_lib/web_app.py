@@ -54,36 +54,87 @@ def _find_dataset_root(base_dir: str):
             break
     return meta_path, sdf_dir
 
-def _build_no_h_sdf_cache(sdf_dir: str) -> str:
+def _remove_all_hydrogens(mol):
+    if not HAS_RDKIT or mol is None:
+        return mol
+    try:
+        mol2 = Chem.RemoveHs(mol, sanitize=True, implicitOnly=False)
+    except Exception:
+        mol2 = Chem.Mol(mol)
+    try:
+        hpat = Chem.MolFromSmarts('[#1]')
+        mol3 = Chem.DeleteSubstructs(mol2, hpat, onlyFrags=False)
+        Chem.SanitizeMol(mol3)
+        return mol3
+    except Exception:
+        return mol2
+
+
+def _build_no_h_sdf_cache(sdf_dir: str, meta_csv: str) -> str:
     """Create a no-H SDF cache directory next to the dataset and return its path."""
     cache_dir = os.path.join(os.path.expanduser('~'), '.cache', 'dipeptide_lib')
     out_dir = os.path.join(cache_dir, 'sdf_noH')
     os.makedirs(out_dir, exist_ok=True)
-    if not HAS_RDKIT:
-        return sdf_dir
-    for fname in os.listdir(sdf_dir):
-        if not fname.lower().endswith('.sdf'):
-            continue
-        src = os.path.join(sdf_dir, fname)
-        # normalize to id.sdf base then append _noH.sdf
-        base = os.path.splitext(fname)[0]
-        dst = os.path.join(out_dir, f"{base}_noH.sdf")
-        if os.path.exists(dst):
-            continue
+    id_to_smiles = {}
+    if os.path.exists(meta_csv):
         try:
-            mols = Chem.SDMolSupplier(src)
-            mol = mols[0] if len(mols) > 0 else None
-            if mol:
-                mol_no_h = Chem.RemoveHs(mol, sanitize=True)
-                with open(dst, 'w') as f:
-                    f.write(Chem.MolToMolBlock(mol_no_h))
+            mdf = pd.read_csv(meta_csv)
+            id_to_smiles = {str(r['id']): str(r['smiles']) for _, r in mdf.iterrows() if 'id' in r and 'smiles' in r}
         except Exception:
-            # Fallback: copy original
+            id_to_smiles = {}
+    if not HAS_RDKIT:
+        # If RDKit not available, just copy originals to keep paths valid
+        for fname in os.listdir(sdf_dir):
+            if not fname.lower().endswith('.sdf'):
+                continue
+            base = os.path.splitext(fname)[0]
+            src = os.path.join(sdf_dir, fname)
+            dst = os.path.join(out_dir, f"{base}_noH.sdf")
+            if os.path.exists(dst):
+                continue
             try:
                 with open(src, 'rb') as fsrc, open(dst, 'wb') as fdst:
                     fdst.write(fsrc.read())
             except Exception:
                 pass
+        return out_dir
+    for fname in os.listdir(sdf_dir):
+        if not fname.lower().endswith('.sdf'):
+            continue
+        src = os.path.join(sdf_dir, fname)
+        base = os.path.splitext(fname)[0]
+        dst = os.path.join(out_dir, f"{base}_noH.sdf")
+        if os.path.exists(dst):
+            continue
+        mol = None
+        try:
+            mols = Chem.SDMolSupplier(src)
+            mol = mols[0] if len(mols) > 0 else None
+        except Exception:
+            mol = None
+        if mol is None:
+            # Fallback to SMILES from metadata
+            smi = id_to_smiles.get(base)
+            if smi:
+                try:
+                    mol = Chem.MolFromSmiles(smi)
+                    # generate 3D coords optional; stick to 2D for robustness
+                except Exception:
+                    mol = None
+        if mol is not None:
+            try:
+                mol_no_h = _remove_all_hydrogens(mol)
+                with open(dst, 'w') as f:
+                    f.write(Chem.MolToMolBlock(mol_no_h))
+                continue
+            except Exception:
+                pass
+        # As last resort, copy original
+        try:
+            with open(src, 'rb') as fsrc, open(dst, 'wb') as fdst:
+                fdst.write(fsrc.read())
+        except Exception:
+            pass
     return out_dir
 
 
@@ -93,7 +144,7 @@ def prepare_data_paths():
     repo_data = os.path.abspath(repo_data)
     meta1, sdf1 = _find_dataset_root(repo_data)
     if meta1 and sdf1:
-        return meta1, sdf1, _build_no_h_sdf_cache(sdf1)
+        return meta1, sdf1, _build_no_h_sdf_cache(sdf1, meta1)
     # 2) secrets.DATA_URL (ZIP)
     data_url = ''
     try:
@@ -113,7 +164,7 @@ def prepare_data_paths():
             zf.extractall(cache_dir)
         meta2, sdf2 = _find_dataset_root(cache_dir)
         if meta2 and sdf2:
-            return meta2, sdf2, _build_no_h_sdf_cache(sdf2)
+            return meta2, sdf2, _build_no_h_sdf_cache(sdf2, meta2)
     # 3) fallback: not found
     return None, None, None
 
