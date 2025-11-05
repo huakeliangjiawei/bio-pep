@@ -234,15 +234,18 @@ def load_resources():
     ids = [str(r['id']) for _, r in df.iterrows()]
     smiles = [str(r['smiles']) for _, r in df.iterrows()]
     id_to_row = {str(r['id']): r for _, r in df.iterrows()}
-    # 预生成位指纹以加速相似计算
+    # 预生成位指纹以加速相似计算（若 RDKit 不可用则填 None）
     fps = []
-    for smi in smiles:
-        m = Chem.MolFromSmiles(smi)
-        if m is None:
-            fps.append(None)
-            continue
-        fp = GetMorganFingerprintAsBitVect(m, radius=RADIUS, nBits=N_BITS)
-        fps.append(fp)
+    if HAS_RDKIT:
+        for smi in smiles:
+            m = Chem.MolFromSmiles(smi)
+            if m is None:
+                fps.append(None)
+                continue
+            fp = GetMorganFingerprintAsBitVect(m, radius=RADIUS, nBits=N_BITS)
+            fps.append(fp)
+    else:
+        fps = [None] * len(smiles)
     return df, ids, smiles, fps, id_to_row
 
 
@@ -354,12 +357,19 @@ def main():
 
     col1, col2 = st.columns([2, 1])
     with col1:
-        st.subheader('方式一：相似检索')
-        query_smiles = st.text_input('输入 SMILES', '')
-        uploaded = st.file_uploader('或上传 SDF/SMILES 文件', type=['sdf', 'mol', 'smi', 'txt'])
-        topk = st.slider('Top-K 返回数量', 5, 50, TOPK)
-        run = st.button('开始检索')
-        st.divider()
+        if HAS_RDKIT:
+            st.subheader('方式一：相似检索')
+            query_smiles = st.text_input('输入 SMILES', '')
+            uploaded = st.file_uploader('或上传 SDF/SMILES 文件', type=['sdf', 'mol', 'smi', 'txt'])
+            topk = st.slider('Top-K 返回数量', 5, 50, TOPK)
+            run = st.button('开始检索')
+            st.divider()
+        else:
+            st.info('云端环境未加载 RDKit：已自动隐藏相似检索功能。请确保 requirements 安装成功或固定 Python 版本为 3.10。')
+            query_smiles = ''
+            uploaded = None
+            topk = TOPK
+            run = False
         st.subheader('方式二：按 L/D 与氨基酸类型检索')
         ld1 = st.selectbox('第一个氨基酸 L/D', ['L','D'])
         aa1 = st.selectbox('第一个氨基酸类型', sorted(set([x.split('-',1)[1] for x in df['aa1'] if '-' in x])))
