@@ -225,8 +225,8 @@ HERO_HTML = """
 """
 
 FOOTER_HTML = """
-<div class="footer">
-  <span>作者：<strong>Jiawei Liang</strong>; 单位：<strong>Ni Lab in SZU</strong></span>
+<div class=\"footer\">
+  <span>Authors: <strong>Jiawei Liang</strong>, <strong>Guanghui Gou</strong>; Affiliation: <strong>Ni Lab, SZU</strong></span>
 </div>
 """
 
@@ -343,9 +343,9 @@ def render_mol_2d(mol, legend: str = ""):
     if not HAS_RDKIT or mol is None:
         return None
     try:
-        # 按需导入绘图后端，避免 Chem/AllChem 可用但 Cairo 缺失时影响整体功能
         from rdkit.Chem.Draw import rdMolDraw2D  # type: ignore
         mc = Chem.Mol(mol)
+        mc = Chem.RemoveHs(mc, sanitize=True)
         rdDepictor.Compute2DCoords(mc)
         d2d = rdMolDraw2D.MolDraw2DCairo(280, 210)
         rdMolDraw2D.PrepareAndDrawMolecule(d2d, mc, legend=legend)
@@ -386,8 +386,8 @@ def main():
 
     # 数据可用性检查，避免云端缺失文件时报错
     if not (META_CSV and SDF_DIR and os.path.exists(META_CSV) and os.path.isdir(SDF_DIR)):
-        st.error('数据未找到：请将 data/metadata.csv 与 data/sdf/ 放入仓库，或在 App Settings -> Secrets 中设置 DATA_URL 指向包含 metadata.csv 与 sdf/ 的 ZIP。')
-        st.caption('已自动尝试从 DATA_URL 下载并递归定位文件，但未找到有效结构。请确保 ZIP 根目录包含 metadata.csv 与 sdf/，或其子目录中包含这些内容。')
+        st.error('Data not found: please include data/metadata.csv and data/sdf/ in the repo, or set DATA_URL in App Settings -> Secrets to a ZIP containing metadata.csv and sdf/.')
+        st.caption('The app tried to download from DATA_URL and locate files recursively but found no valid structure. Ensure the ZIP contains metadata.csv and an sdf/ directory (possibly under a subfolder).')
         st.markdown(FOOTER_HTML, unsafe_allow_html=True)
         return
 
@@ -421,12 +421,12 @@ def main():
             uploaded = None
             topk = TOPK
             run = False
-        st.subheader('方式二：按 L/D 与氨基酸类型检索')
-        ld1 = st.selectbox('第一个氨基酸 L/D', ['L','D'])
-        aa1 = st.selectbox('第一个氨基酸类型', sorted(set([x.split('-',1)[1] for x in df['aa1'] if '-' in x])))
-        ld2 = st.selectbox('第二个氨基酸 L/D', ['L','D'])
-        aa2 = st.selectbox('第二个氨基酸类型', sorted(set([x.split('-',1)[1] for x in df['aa2'] if '-' in x])))
-        run_pair = st.button('检索该二肽')
+        st.subheader('Method 2: Query by L/D and amino acid types')
+        ld1 = st.selectbox('First amino acid L/D', ['L','D'])
+        aa1 = st.selectbox('First amino acid type', sorted(set([x.split('-',1)[1] for x in df['aa1'] if '-' in x])))
+        ld2 = st.selectbox('Second amino acid L/D', ['L','D'])
+        aa2 = st.selectbox('Second amino acid type', sorted(set([x.split('-',1)[1] for x in df['aa2'] if '-' in x])))
+        run_pair = st.button('Query this dipeptide')
     with col2:
         st.subheader('库统计')
         st.metric('分子数量', f"{len(ids)}")
@@ -444,9 +444,9 @@ def main():
         target_seq = f"{n1}-{n2}"
         hits = df[df['seq'] == target_seq]
         if hits.empty:
-            st.warning(f'未找到序列 {target_seq} 对应的二肽，请检查氨基酸符号或是否在库内。')
+            st.warning(f'No dipeptide found for sequence {target_seq}. Please check amino acid symbols or library coverage.')
         else:
-            st.subheader('按符号检索结果')
+            st.subheader('Results for sequence query')
             export_rows2 = []
             export_sdf_paths2 = []
             for _, row in hits.iterrows():
@@ -503,16 +503,26 @@ def main():
                 out_csv = io.StringIO()
                 pd.DataFrame(export_rows2).to_csv(out_csv, index=False)
                 out_csv_bytes = out_csv.getvalue().encode('utf-8')
-                st.download_button('下载该序列的 CSV', data=out_csv_bytes, file_name='pair_results.csv', key="dl_pair_csv")
+                st.download_button('Download sequence CSV', data=out_csv_bytes, file_name='pair_results.csv', key="dl_pair_csv")
                 zbuf = io.BytesIO()
                 with zipfile.ZipFile(zbuf, 'w', zipfile.ZIP_DEFLATED) as zf:
                     zf.writestr('pair_results.csv', out_csv_bytes)
                     for pth in export_sdf_paths2:
                         try:
-                            zf.write(pth, arcname=os.path.basename(pth))
+                            base = os.path.basename(pth)
+                            cid2 = os.path.splitext(base)[0]
+                            if HAS_RDKIT:
+                                mol = Chem.SDMolSupplier(pth)[0]
+                                if mol:
+                                    mol_no_h = Chem.RemoveHs(mol, sanitize=True)
+                                    zf.writestr(f"{cid2}_noH.sdf", Chem.MolToMolBlock(mol_no_h))
+                                else:
+                                    zf.write(pth, arcname=base)
+                            else:
+                                zf.write(pth, arcname=base)
                         except Exception:
                             pass
-                st.download_button('打包下载该序列 SDF+CSV', data=zbuf.getvalue(), file_name='pair_results_bundle.zip')
+                st.download_button('Download sequence SDF+CSV (no H)', data=zbuf.getvalue(), file_name='pair_results_bundle.zip')
 
     if HAS_RDKIT and run:
         if uploaded is not None:
@@ -538,7 +548,7 @@ def main():
             query_mol = Chem.MolFromSmiles(query_smiles)
 
         if query_mol is None:
-            st.error('无法解析输入，请提供有效的 SMILES 或 SDF 文件。')
+            st.error('Failed to parse input. Please provide a valid SMILES or SDF file.')
             st.markdown(FOOTER_HTML, unsafe_allow_html=True)
             return
 
@@ -594,7 +604,7 @@ def main():
         sims.sort(key=lambda x: x[1], reverse=True)
         ranked = sims[:topk]
 
-        st.subheader('结果')
+        st.subheader('Results')
         export_rows = []
         export_sdf_paths = []
         for cid, tanimoto in ranked:
